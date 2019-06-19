@@ -73,13 +73,25 @@ app.use(
           title: args.eventInput.title,
           description: args.eventInput.description,
           price: +args.eventInput.price,
-          date: new Date(args.eventInput.date)
+          date: new Date(args.eventInput.date),
+          creator: "lvuhbavuvlhnfacbual"
         });
+        let createdEvent;
         return event
           .save()
           .then(result => {
-            console.log(result);
-            return { ...result._doc, _id: result._doc._id.toString() };
+            createdEvent = { ...result._doc, _id: result._doc._id.toString() };
+            return User.findById("lvuhbavuvlhnfacbual");
+          })
+          .then(user => {
+            if (!user) {
+              throw new Error("User not found.");
+            }
+            user.createEvent.push(event);
+            return user.save();
+          })
+          .then(result => {
+            return createdEvent;
           })
           .catch(err => {
             console.log(err);
@@ -87,7 +99,7 @@ app.use(
           });
       },
       createUser: args => {
-        User.findOne({ email: args.userInput.email })
+        return User.findOne({ email: args.userInput.email })
           .then(user => {
             if (user) {
               throw new Error("User exists already.");
